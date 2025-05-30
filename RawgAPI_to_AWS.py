@@ -5,7 +5,7 @@ from io import BytesIO
 from config import API_KEY, BASE_URL, BUCKET_NAME, S3_PREFIX
 
 # ---------- CONFIG ---------- #
-total_pages = 10 #40 on each page
+total_pages = 5 #40 on each page
 
 all_results = []
 

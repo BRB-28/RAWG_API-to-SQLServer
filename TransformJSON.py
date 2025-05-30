@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import numpy as np
 from config import conn_str, BUCKET_NAME, S3_KEY
+import datetime
 
 
 # Download file from S3 into memory
@@ -168,6 +169,7 @@ if __name__ == '__main__':
     games_table['esrb_rating_name'] = games_table['esrb_rating_name'].fillna('')
     game_platforms_df = game_platforms_df.astype({'game_id': int, 'platform_id': int})
 
+    sync_start = datetime.datetime.now()
 
     insert_dataframe(games_table, 'Games', conn)
     insert_dataframe(platforms_df, 'Platforms', conn)
@@ -181,6 +183,29 @@ if __name__ == '__main__':
 
     screenshots_df = screenshots_df.drop_duplicates(subset='screenshot_id')
     insert_dataframe(screenshots_df, 'Screenshots', conn)
+
+    # Log Variables
+    sync_end = datetime.datetime.now()
+    records_processed = len(games_df)  # or however you count processed rows
+    max_updated_timestamp = games_df['updated'].max() if not games_df.empty else None
+    status = 'Success'
+    notes = 'Completed without errors'
+
+    # Insert log into SyncResults table
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO SyncResults (SyncStart, SyncEnd, RecordsProcessed, MaxUpdatedTimestamp, Status, Notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (sync_start, sync_end, records_processed, max_updated_timestamp, status, notes))
+
+    conn.commit()
+    print("SyncResults log inserted successfully")
+
+    #Run Staging Sync
+    cursor = conn.cursor()
+    cursor.execute("EXEC Copy_Staging_To_Games")
+    conn.commit()
+    print("Staging Tables Synced")
 
     conn.close()
     print("All inserts completed")

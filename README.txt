@@ -21,6 +21,14 @@ Pipeline Overview
 - Database Load:
   Uses pyodbc to connect to SQL Server and insert cleaned tables with proper primary/foreign key relationships.
 
+  ### Database Setup
+
+This project requires the following stored procedure:
+- Copy_Staging_To_Games
+
+Before running the pipeline, deploy this procedure to your SQL Server:
+
+
 Tech Stack
 
 - Python (requests, pandas, boto3, pyodbc, numpy)
